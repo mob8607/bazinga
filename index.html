@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bazinga - The Game</title>
+    <link rel="stylesheet" href="normalize.css">
+</head>
+<body>
+<canvas id="myCanvas" width="100%" height="200"></canvas>
+<script src="polyfill.js"></script>
+<script>
+    function drawCircle(circle, context) {
+        context.beginPath();
+        context.arc(circle.x, circle.y, circle.radius, 0, 2*Math.PI);
+        context.fillStyle = circle.color;
+        context.fill();
+        context.strokeStyle = 'black';
+        context.stroke();
+    }
+
+    var canvas = document.getElementById('myCanvas');
+
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    var context = canvas.getContext('2d');
+
+    var circles = [];
+    for (var i = 0; i < 1000; i++) {
+        var circle = {
+            radius: randomIntFromInterval(25, 30),
+            x: randomIntFromInterval(0, canvas.width),
+            y: randomIntFromInterval(0, canvas.height),
+            color: getRandomColor()
+        };
+        circles.push(circle);
+        drawCircle(circle, context);
+    }
+
+    setTimeout(function() {
+        var startTime = (new Date()).getTime();
+            animate(circles, canvas, context, startTime);
+    }, 100);
+
+    function animate(circles, canvas, context, startTime) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        for (var i = 0; i < 1000; i++) {
+            circle = circles[i];
+
+            var newX = circle.x + randomIntFromInterval(-5, 5);
+            var newY = circle.y + randomIntFromInterval(-5, 5);
+
+            circle.x = newX;
+            circle.y = newY;
+            drawCircle(circle, context);
+        }
+
+        // request new frame
+        requestAnimationFrame(function() {
+            animate(circles, canvas, context, startTime);
+        });
+    }
+
+    function randomIntFromInterval(min,max) {
+        return Math.floor(Math.random()*(max-min+1)+min);
+    }
+
+    function getRandomColor() {
+        var letters = '0123456789ABCDEF'.split('');
+        var color = '#';
+        for (var i = 0; i < 6; i++ ) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+</script>
+</body>
+</html>
