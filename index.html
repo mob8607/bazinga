@@ -4,11 +4,66 @@
     <meta charset="UTF-8">
     <title>Bazinga - The Game</title>
     <link rel="stylesheet" href="normalize.css">
+    <style>
+        .main-sheldon {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: #FFFFFF;
+            top: 100px;
+            left: 100px;
+            cursor: crosshair;
+            display: none;
+        }
+
+        .stats-overview {
+            display: none;
+            position: absolute;
+            left: 50%;
+            top: 200px;
+            width: 200px;
+            margin-left: -100px;
+            background-color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 20px;
+        }
+
+        .alert-box {
+            display: none;
+            position: fixed;
+            padding: 40px;
+            top: 0;
+            height: 100%;
+            background-color: #fff;
+            text-align: center;
+            font-size: 20px;
+        }
+    </style>
 </head>
 <body>
 <canvas id="myCanvas" width="100%" height="200"></canvas>
+<div id="sheldon" class="main-sheldon">
+    <img src="bazinga.jpg" width="100" height="100"/>
+</div>
+<div id="stats" class="stats-overview">
+    <p>You LOST!</p>
+    <p>Your Score: <span id="end-count"></span></p>
+</div>
+<div id="alert" class="alert-box">
+</div>
 <script src="polyfill.js"></script>
 <script>
+    var circleAmount = 1500;
+    var sheldonIsHere = false;
+    var sheldonWidth = 100;
+    var sheldonHeight = 100;
+    var sheldonCounter = 0;
+    var sheldonShowtime = 300;
+    var counter = 0;
+    var letThemPlay = true;
+    var minSize = 400;
+
     function drawCircle(circle, context) {
         context.beginPath();
         context.arc(circle.x, circle.y, circle.radius, 0, 2*Math.PI);
@@ -25,7 +80,7 @@
     var context = canvas.getContext('2d');
 
     var circles = [];
-    for (var i = 0; i < 1000; i++) {
+    for (var i = 0; i < circleAmount; i++) {
         var circle = {
             radius: randomIntFromInterval(25, 30),
             x: randomIntFromInterval(0, canvas.width),
@@ -38,22 +93,47 @@
 
     setTimeout(function() {
         var startTime = (new Date()).getTime();
-            animate(circles, canvas, context, startTime);
+        var alertBox = document.getElementById('alert');
+
+        if (canvas.width < minSize || canvas.height < minSize) {
+            letThemPlay = false;
+            alertBox.innerHTML = 'You need a bigger browser-window to play this game! At least 400 x 400px';
+            alertBox.style.display = 'block';
+        }
+
+        animate(circles, canvas, context, startTime);
     }, 100);
 
+    bindListenToClick();
+
     function animate(circles, canvas, context, startTime) {
+        if (!letThemPlay) {
+            return;
+        }
+
         context.clearRect(0, 0, canvas.width, canvas.height);
-        for (var i = 0; i < 1000; i++) {
+        for (var i = 0; i < circleAmount; i++) {
             circle = circles[i];
 
-            var newX = circle.x + randomIntFromInterval(-5, 5);
-            var newY = circle.y + randomIntFromInterval(-5, 5);
+            var newX = circle.x + randomIntFromInterval(-2, 2);
+            var newY = circle.y + randomIntFromInterval(-2, 2);
 
             circle.x = newX;
             circle.y = newY;
             drawCircle(circle, context);
         }
 
+        if (checkForSheldon()) {
+            showSheldon();
+        }
+
+        if (sheldonIsHere === true) {
+            sheldonCounter++;
+        }
+
+        if (sheldonIsHere && sheldonCounter > sheldonShowtime) {
+            hideSheldon();
+        }
         // request new frame
         requestAnimationFrame(function() {
             animate(circles, canvas, context, startTime);
@@ -71,6 +151,72 @@
             color += letters[Math.floor(Math.random() * 16)];
         }
         return color;
+    }
+
+    function checkForSheldon() {
+        if (sheldonIsHere) {
+            return false;
+        }
+
+        var i = randomIntFromInterval(0, 1000);
+
+        if (i < 5) {
+            return true;
+        }
+    }
+
+    function showSheldon() {
+        var left = randomIntFromInterval(0, canvas.width - sheldonWidth);
+        var top = randomIntFromInterval(0, canvas.height - sheldonHeight);
+        var sheldon = document.getElementById('sheldon');
+
+        sheldon.style.left = left + 'px';
+        sheldon.style.top = top + 'px';
+
+        sheldon.style.display = 'block';
+
+        sheldonIsHere = true;
+    }
+
+    function hideSheldon(hit) {
+        var sheldon = document.getElementById('sheldon');
+
+        sheldon.style.display = 'none';
+        sheldonIsHere = false;
+        sheldonCounter = 0;
+
+        if (!hit) {
+            letThemPlay = false;
+            showStats();
+        }
+    }
+
+    function hitSheldon() {
+        counter++;
+
+        sheldonShowtime = sheldonShowtime - 12;
+
+        if (sheldonShowtime < 10) {
+            sheldonShowtime = 10;
+        }
+
+        hideSheldon(true);
+    }
+
+    function bindListenToClick() {
+        var sheldon = document.getElementById('sheldon');
+
+        sheldon.addEventListener('click', function() {
+            hitSheldon();
+        }, false);
+    }
+
+    function showStats() {
+        var endCountElement = document.getElementById('end-count');
+        var statsElement = document.getElementById('stats');
+
+        endCountElement.innerHTML = counter;
+        statsElement.style.display = 'block';
     }
 </script>
 </body>
